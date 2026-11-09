@@ -18,16 +18,18 @@ class TypeTimer:
                 "python", "code", "speed", "test", "fast", "type",
                 "apple", "banana", "computer", "keyboard", "mouse", 
                 "screen", "window", "door", "table", "chair", 
-                "pencil", "paper", "book", "notebook", "school"
+                "pencil", "paper", "book", "notebook", "school","nigga", "sort"
+                , "word" , "papyrus", "origin"  
             ]
         
         # 2. paragraph generator
-        selected_words = random.choices(short_words, k=25)
-        self.target_paragraph = " ".join(selected_words)
+        self.short_words = short_words
+        self.target_paragraph = self.generate_paragraph()
         
         # timer variables
         self.time_left = 30
         self.timer_running = False
+        self.timer_after_id = None
         
         # --- UI Components ---
         tk.Label(root, text="Type as much as you can in 30 seconds:", font=("Arial", 14)).pack(pady=10)
@@ -60,6 +62,31 @@ class TypeTimer:
         self.result_label = tk.Label(root, text="", font=("Arial", 13))
         self.result_label.pack(pady=10)
 
+        self.try_again_button = tk.Button(root, text="Try Again", command=self.try_again)
+        self.try_again_button.pack(pady=5)
+
+    def generate_paragraph(self):
+        return " ".join(random.choices(self.short_words, k=25))
+
+    def try_again(self):
+        if self.timer_after_id is not None:
+            self.root.after_cancel(self.timer_after_id)
+            self.timer_after_id = None
+
+        self.timer_running = False
+        self.time_left = 30
+        self.target_paragraph = self.generate_paragraph()
+
+        self.text_display.config(state="normal")
+        self.text_display.delete("1.0", "end")
+        self.text_display.insert("1.0", self.target_paragraph)
+        self.text_display.config(state="disabled")
+        self.input_entry.config(state="normal")
+        self.input_entry.delete(0, "end")
+        self.input_entry.focus()
+        self.timer_label.config(text=f"Time Left: {self.time_left}s", fg="red")
+        self.result_label.config(text="")
+
     def on_key_release(self, event):
         # the way to start the timmer when the user starts typind
         if not self.timer_running and event.keysym not in ("Return", "BackSpace", "Shift_L", "Shift_R", "Control_L", "Alt_L", "Caps_Lock"):
@@ -90,11 +117,12 @@ class TypeTimer:
         self.text_display.config(state="disabled")
 
     def update_timer(self):
+        self.timer_after_id = None
         if self.timer_running:
             if self.time_left > 0:
                 self.timer_label.config(text=f"Time Left: {self.time_left}s")
                 self.time_left -= 1
-                self.root.after(1000, self.update_timer)
+                self.timer_after_id = self.root.after(1000, self.update_timer)
             else:
                 self.timer_label.config(text=" Time's Up!   !!! I'm sorry for despicable words it's random words from the internet !!!", fg="purple")
                 self.time_is_up()
@@ -109,6 +137,9 @@ class TypeTimer:
             return
         
         self.timer_running = False
+        if self.timer_after_id is not None:
+            self.root.after_cancel(self.timer_after_id)
+            self.timer_after_id = None
         self.input_entry.config(state="disabled")
         self.calculate_results()
 
